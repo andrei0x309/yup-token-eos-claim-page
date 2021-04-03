@@ -15,6 +15,7 @@ import withReactContent from 'sweetalert2-react-content'
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Table from 'react-bootstrap/Table';
+import Spinner from 'react-bootstrap/Spinner'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './orderentry.css';
 
@@ -40,6 +41,7 @@ MySwal.fire({
 })
 
 
+
 */
 const network = {
   chainId:'cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4f',
@@ -55,7 +57,12 @@ const defaultState = {
   activeUser: null, //to store user object from UAL
   accountName: '', //to store account name of logged in wallet user
   orderItems: '0',
-  tablePageResult: [{userid:'', items:[], status:''}]
+  tablePageResult: { id:0, userid:'', items:[], status:''},
+  showTableState:false,
+  showtableLoading: false,
+  index:0,
+  moreRows:false,
+  lastTransaction:null
 }
 
 class OrderEntryApp extends React.Component {
@@ -65,22 +72,25 @@ class OrderEntryApp extends React.Component {
     super(props)
     this.state = {
       ...defaultState,
-      rcp: new JsonRpc(`${network.protocol}://${network.host}:${network.port}`)
+      rcp: new JsonRpc(`${network.rpcEndpoints[0].protocol}://${network.rpcEndpoints[0].host}:${network.rpcEndpoints[0].port}`)
     }
 
     this.updateAccountName = this.updateAccountName.bind(this)
     this.renderOrderButton = this.renderOrderButton.bind(this)
     this.placeorder = this.placeorder.bind(this)
+    this.redoTransaction = this.redoTransaction.bind(this)
+    this.doTransaction = this.doTransaction.bind(this)
     this.renderModalButton = this.renderModalButton.bind(this)
     this.handleOrderUpdate = this.handleOrderUpdate.bind(this)
     this.renderOrderForm = this.renderOrderForm.bind(this)
-    this.showTable = this.showTable.bind(this)
+    this.updateTable = this.updateTable.bind(this)
+    this.renderTable = this.renderTable.bind(this)
   }
 
   // implement code to transact, using the order details, here
   async placeorder() {
     const { accountName, activeUser, orderItems } = this.state;
-    console.log(accountName, activeUser,orderItems )
+    //console.log(accountName, activeUser,orderItems )
     const AddOrderTransaction = {
       actions:[
         { account:accountName,
@@ -96,10 +106,28 @@ class OrderEntryApp extends React.Component {
       ]
 
     };
-    
+    this.setState({lastTransaction: AddOrderTransaction});
+    await this.doTransaction(AddOrderTransaction)
+   
+    //console.log("With UAL implemented, this submits an order for items " + JSON.parse(`[${orderItems}]`));
+  }
 
+  async redoTransaction(){
+    if(this.state.lastTransaction === null){
+      MySwal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: 'There isn\'t a previous transaction',
+      });
+    }else{
+      await this.doTransaction(this.state.lastTransaction)
+    }
+  }
+
+  async doTransaction(transaction){
     try{
-      const result = await activeUser.signTransaction(AddOrderTransaction, {broadcast: true});
+      const {activeUser } = this.state;
+      const result = await activeUser.signTransaction(transaction, {broadcast: true});
  
       MySwal.fire({
         icon: 'success',
@@ -120,16 +148,23 @@ class OrderEntryApp extends React.Component {
       });
 
     }
-
-    //console.log("With UAL implemented, this submits an order for items " + JSON.parse(`[${orderItems}]`));
   }
-
 
   renderOrderButton() {
     return (
       <p className='ual-btn-wrapper'>
         <Button variant="outline-warning" onClick={this.placeorder}>
           {'Place Order'}
+        </Button>
+      </p>
+    )
+  }
+
+  renderRedoOrderButton() {
+    return (
+      <p className='ual-btn-wrapper'>
+        <Button variant="outline-warning" onClick={this.redoTransaction}>
+          {'Redo Last Transaction'}
         </Button>
       </p>
     )
@@ -210,17 +245,29 @@ class OrderEntryApp extends React.Component {
 
   renderShowTableBtn(){
     return(
+    ( !this.state.showTableState && !this.state.showtableLoading ) ? 
     <p className='ual-btn-wrapper'>
-    <Button variant="outline-success" onClick={this.showTable}>
-      {'Get Order Table'}
+    <Button variant="outline-success" onClick={this.updateTable}>
+       {'Get Order Table'}
     </Button>
-  </p>)
+    </p>
+    : (this.state.showTableState && this.state.moreRows) ? 
+    <p className='ual-btn-wrapper'>
+    <Button variant="outline-success" onClick={this.updateTable}>
+       {'Next Page'}
+    </Button>
+    </p>
+    :'')
 
   }
 
+
+  
+
+
   renderTable(){ 
     return (
-<Table striped bordered hover variant="dark">
+<Table style={{marginLeft: 'auto', marginRight:'auto', width:'90%', marginTop:'10px', marginBottom:'10px'}} striped bordered hover variant="dark">
   <thead>
     <tr>
       <th>#</th>
@@ -230,28 +277,51 @@ class OrderEntryApp extends React.Component {
     </tr>
   </thead>
   <tbody>
-     
+  {Object.keys(this.state.tablePageResult).map((id, i) =>
+  <tr key={i}>
+  {Object.keys(this.state.tablePageResult[id]).map((key, i) => 
+  <td key={i}>{ 
+    (key === 'items')? `[ ${this.state.tablePageResult[id][key].join(', ')} ]`:
+    this.state.tablePageResult[id][key] }</td>
+  )}
+  </tr>) }
   </tbody>
 </Table>
     )
 
   }
 
-  async showTable(){
+  async updateTable(){
 
-    const { accountName, activeUser, orderItems } = this.state;
-    console.log(activeUser)
-    console.log(this.state)
+    const { accountName } = this.state;
+    this.setState({showTableState:false,showtableLoading:true});
+    console.log()
     const resp = await this.state.rcp.get_table_rows(
       { json:true,
-        code:activeUser.session.publicKey,
+        code:accountName,
         scope:accountName,
         table:'orders',
-        litmit:5
+        reverse:false,
+        show_payer:false,
+        limit:3,
+        lower_bound:this.state.index
+        //lower_bound: this.state.index,
+        //upper_bound: this.state.index+3
       }
     )
+    let tableEntries = {}
+    for (const [key, value] of Object.entries(resp.rows)) {
+      tableEntries[key] = {id:value.id, userid:value.userid, items:value.items, status:value.status}
+    }
+    console.log(resp);
+    console.log(resp.more)
 
-    console.log(resp)
+    this.setState({tablePageResult:tableEntries,
+    showTableState:true,
+    moreRows:resp.more,
+    index:this.state.index+3,
+    showtableLoading:false
+    });
 
   }
 
@@ -279,6 +349,9 @@ class OrderEntryApp extends React.Component {
         <h3 className='ual-subtitle'>{loggedIn}</h3>
         {this.renderOrderForm()}
         {orderBtn}
+        {this.renderRedoOrderButton()}
+        {this.state.showtableLoading && <Spinner animation="grow" variant="light" />}
+        {this.state.showTableState && this.renderTable()}
         {this.renderShowTableBtn()}
 
         {logoutBtn}
