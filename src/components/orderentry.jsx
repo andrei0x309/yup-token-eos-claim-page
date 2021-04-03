@@ -18,40 +18,11 @@ import Table from 'react-bootstrap/Table';
 import Spinner from 'react-bootstrap/Spinner'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './orderentry.css';
-
+import { network } from './../App'
 
 const MySwal = withReactContent(Swal)
 
-
-/*Swal.fire({
-  icon: 'error',
-  title: 'Oops...',
-  text: 'Something went wrong!',
-  footer: '<a href>Why do I have this issue?</a>'
-})
-
-MySwal.fire({
-  title: <p>Hello World</p>,
-  footer: 'Copyright 2018',
-  didOpen: () => {
-    // `MySwal` is a subclass of `Swal`
-    //   with all the same instance & static methods
-    MySwal.clickConfirm()
-  }
-})
-
-
-
-*/
-const network = {
-  chainId:'cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4f',
-  rpcEndpoints: [{
-    protocol: 'http',
-    host: 'localhost',
-    port: '8888',
-  }]
-}
-
+ 
 
 const defaultState = {
   activeUser: null, //to store user object from UAL
@@ -90,7 +61,7 @@ class OrderEntryApp extends React.Component {
   // implement code to transact, using the order details, here
   async placeorder() {
     const { accountName, activeUser, orderItems } = this.state;
-    //console.log(accountName, activeUser,orderItems )
+
     const AddOrderTransaction = {
       actions:[
         { account:accountName,
@@ -133,14 +104,14 @@ class OrderEntryApp extends React.Component {
         icon: 'success',
         title: 'Transaction Signed',
         html:  <div>
-            <p><b>wasBroadcast</b>: { new Boolean(result.wasBroadcast).toString()  }</p>
+            <p><b>wasBroadcast</b>: { Boolean(result.wasBroadcast).toString()  }</p>
             <p><b>transactionId</b>: { result.transactionId }</p>
             <p><b>status</b>:  { result.status } </p>
         </div>,
       });
      
     }catch(error){
-      console.log(error);
+      //console.log(error);
       MySwal.fire({
         icon: 'error',
         title: 'Oops...',
@@ -261,10 +232,6 @@ class OrderEntryApp extends React.Component {
 
   }
 
-
-  
-
-
   renderTable(){ 
     return (
 <Table style={{marginLeft: 'auto', marginRight:'auto', width:'90%', marginTop:'10px', marginBottom:'10px'}} striped bordered hover variant="dark">
@@ -295,7 +262,7 @@ class OrderEntryApp extends React.Component {
 
     const { accountName } = this.state;
     this.setState({showTableState:false,showtableLoading:true});
-    console.log()
+
     const resp = await this.state.rcp.get_table_rows(
       { json:true,
         code:accountName,
@@ -313,8 +280,8 @@ class OrderEntryApp extends React.Component {
     for (const [key, value] of Object.entries(resp.rows)) {
       tableEntries[key] = {id:value.id, userid:value.userid, items:value.items, status:value.status}
     }
-    console.log(resp);
-    console.log(resp.more)
+    //console.log(resp);
+    //console.log(resp.more)
 
     this.setState({tablePageResult:tableEntries,
     showTableState:true,

@@ -14,12 +14,12 @@
     "sweetalert2": "^10.15.7",
     "sweetalert2-react-content": "^3.3.1",
     "typescript": "^4.0.3",
-    "ual-anchor": "^0.5.1",
+    "ual-anchor": "^1.0.2",
     "ual-ledger": "^0.3.0",
     "ual-lynx": "^0.4.0",
     "ual-meetone": "^0.1.1",
     "ual-reactjs-renderer": "^0.3.1",
-    "ual-scatter": "^0.3.0",
+    "ual-scatter": "^0.1.6",
     "ual-token-pocket": "^0.3.0"
   },
   "scripts": {
