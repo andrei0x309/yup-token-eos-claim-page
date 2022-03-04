@@ -1,6 +1,5 @@
 node_modules
 build
-public
 _MACOSX
 .env
 yarn-error.log
