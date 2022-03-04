@@ -1,56 +1,52 @@
-/*
-  Order Entry React Demo for EOSIO Training & Certification: AD101
-
-  Import and implement UAL plugins, consumer, and wrapper in this file
-*/
-
 import React from 'react';
 import { UALProvider, withUAL } from 'ual-reactjs-renderer';
-import { Anchor } from 'ual-anchor';
-import OrderEntryApp from './components/orderentry';
+import { Wombat } from 'ual-wombat'
+import { Anchor } from 'ual-anchor'
+import claimPage from './components/claim-page';
 
 
 // deployed to netfly at
 // https://awesome-dubinsky-e8d22f.netlify.app/
 
-const env = 'testnet';
-
-export const network  = (env === 'testnet') ?  
+export const network =
 {
-  chainId:'cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4f',
+  chainId:'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906',
+  name: 'EOS Mainnet',
   rpcEndpoints: [{
     protocol: 'https',
-    host: 'api.testnet.eos.io',
+    host: 'eos.greymass.com',
     port: '443',
   }]
 }
-:
-{
-  chainId:'cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4f',
-  rpcEndpoints: [{
-    protocol: 'http',
-    host: 'localhost',
-    port: '8888',
-  }]
-};
+;
  
-const anchorConfig = {
-  appName: 'Order-Entry-App',
+const walletConfig = {
+  appName: 'EOS YUP AIRDROP CLAIM PAGE',
 }
 
-const anchor = new Anchor([network], anchorConfig);
-
  
-const AppWithUAL = withUAL(OrderEntryApp);
-AppWithUAL.displayName = anchorConfig.appName;
+const wombat = new Wombat([network], walletConfig);
+const anchor = new Anchor([network], walletConfig);
 
+const AppWithUAL = withUAL(claimPage);
+AppWithUAL.displayName = walletConfig.appName;
+
+const ualProviders = [anchor];
+if (window.__wombat__ && window.scatter){
+  ualProviders.push(wombat);
+}
 
 function App() {
   
   return(
-    <UALProvider chains={[network]} authenticators={[anchor]} appName={anchorConfig.appName} >
+    <UALProvider chains={[network]} authenticators={ualProviders} appName={walletConfig.appName} >
     <AppWithUAL />
+    <p style={{ marginTop: '18rem', textAlign:'center'}}> Page works with thse wallets: <br/><br/>
+    &nbsp;&nbsp;&nbsp;<a href="https://chrome.google.com/webstore/detail/wombat-gaming-wallet-for/amkmjjmmflddogmhpjloimipbofnfjih?hl=en">Wombat(recomended)</a> <br/>
+    &nbsp;&nbsp;&nbsp;<a href="https://greymass.com/en/anchor/">Anchor</a> <br/>
+    </p>
     </UALProvider>
+
   );
 }
 
