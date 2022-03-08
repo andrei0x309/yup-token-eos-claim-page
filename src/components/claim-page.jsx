@@ -44,10 +44,9 @@ class ClaimPage extends React.Component {
   }
  
   getWalletType(walletObj){
-    console.log(walletObj.constructor.name)
     switch(walletObj.constructor.name){
-      case 'AnchorUser':
-        return 'AnchorUser'
+      // case 'AnchorUser':
+      //   return 'AnchorUser'
       case 'WombatUser':
         return 'WombatUser'
       default:
@@ -90,24 +89,25 @@ class ClaimPage extends React.Component {
     const hasAvailableAirdrop =  airdrop.amount > 0 && !airdrop.claimed
     const { accountName, activeUser } = this.state;
  
-    const dummyTransact = {
-      actions:[
-        { account: 'yupyupyupyup',
-          name:'noop',
-          authorization: [ {actor:accountName, permission:activeUser.requestPermission  }],
-          data:{ 
-          }
-        }
-      ]
- 
-    };
+    // const dummyTransact = {
+    //   actions:[
+    //     { account: 'yupyupyupyup',
+    //       name:'noop',
+    //       authorization: [ {actor:accountName, permission:activeUser.requestPermission  }],
+    //       data:{ 
+    //       }
+    //     }
+    //   ]
+    // };
+
+
     let pubKey;
     try {
       pubKey = await (this.getPublickey(this.getWalletType(activeUser)))
     }catch(e){
       this.setState({ isLoading: false })
       if(e.message === 'Unkown wallet type'){
-        this.msg('Please login with Anchor or Wombat wallet', 'error')
+        this.msg('Please login with Wombat wallet', 'error')
       }else{
       this.msg('Can not retrive the public key check you wallet is open', 'error')
       }
@@ -117,20 +117,17 @@ class ClaimPage extends React.Component {
     let txHash = ''
     const isAnchor = this.getWalletType(activeUser) === 'AnchorUser'
     try{
-      if(isAnchor){
-        try{
-        this.setState({ waitForTx: true })
-        const tx = await activeUser.signTransaction(dummyTransact, { broadcast: true, blocksBehind: 3, expireSeconds: 30 })
-        sig = tx.transaction.signatures[0]
-        txHash = tx.transactionId
+        let signMsg
+        try {
+          const resp = await axios.post(`${BACKEND_API2}/eos-airdrop/challenge`, { account: accountName })
+          signMsg = resp.data.data
         }catch(e){
-          this.msg(e.message, 'error')
+          this.msg('Can not generate the auth msg', 'error')
+          this.setState({ isLoading: false })
+          return
         }
-      }else{
-        sig = await activeUser.signArbitrary(pubKey, 'claim-airdrop', 'claim-airdrop', {broadcast: true})
-      }
+        sig = await activeUser.signArbitrary(pubKey, signMsg, 'claim-airdrop', {broadcast: true})
     }catch(e){
-      console.log(e)
       this.msg('Can not sign the transaction', 'error')
       this.setState({ isLoading: false })
       return
@@ -187,13 +184,11 @@ class ClaimPage extends React.Component {
       const accountName = await this.state.activeUser.getAccountName()
       this.setState({ accountName })
     } catch (e) {
-      console.warn(e)
     }
   }
 
   renderYUPClamAmmount = () => {
     const { airdrop, lpAidrop, activeUser } = this.state
-    console.log(airdrop)
     if( !!activeUser ) {
     if(airdrop.claimed && lpAidrop.claimed){
       return <div>

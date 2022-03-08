@@ -26,12 +26,12 @@ const walletConfig = {
 
  
 const wombat = new Wombat([network], walletConfig);
-const anchor = new Anchor([network], walletConfig);
+// const anchor = new Anchor([network], walletConfig);
 
 const AppWithUAL = withUAL(claimPage);
 AppWithUAL.displayName = walletConfig.appName;
 
-const ualProviders = [anchor];
+const ualProviders = [];
 if (window.__wombat__ && window.scatter){
   ualProviders.push(wombat);
 }
@@ -41,9 +41,8 @@ function App() {
   return(
     <UALProvider chains={[network]} authenticators={ualProviders} appName={walletConfig.appName} >
     <AppWithUAL />
-    <p style={{ marginTop: '18rem', textAlign:'center'}}> Page works with thse wallets: <br/><br/>
-    &nbsp;&nbsp;&nbsp;<a href="https://chrome.google.com/webstore/detail/wombat-gaming-wallet-for/amkmjjmmflddogmhpjloimipbofnfjih?hl=en">Wombat(recomended)</a> <br/>
-    &nbsp;&nbsp;&nbsp;<a href="https://greymass.com/en/anchor/">Anchor</a> <br/>
+    <p style={{ marginTop: '18rem', textAlign:'center'}}> Page works with this wallet: <br/><br/>
+    &nbsp;&nbsp;&nbsp;<a href="https://chrome.google.com/webstore/detail/wombat-gaming-wallet-for/amkmjjmmflddogmhpjloimipbofnfjih?hl=en">Wombat</a> <br/>
     </p>
     </UALProvider>
 
