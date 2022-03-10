@@ -103,6 +103,8 @@ class ClaimPage extends React.Component {
 
     let pubKey;
     try {
+      console.log(this.getWalletType(activeUser))
+      console.log(activeUser.constructor.name)
       pubKey = await (this.getPublickey(this.getWalletType(activeUser)))
     }catch(e){
       this.setState({ isLoading: false })
