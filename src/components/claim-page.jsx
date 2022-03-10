@@ -43,16 +43,16 @@ class ClaimPage extends React.Component {
     this.renderAddrForm = this.renderAddrForm.bind(this)
   }
  
-  getWalletType(walletObj){
-    switch(walletObj.constructor.name){
-      // case 'AnchorUser':
-      //   return 'AnchorUser'
-      case 'WombatUser':
-        return 'WombatUser'
-      default:
-        return 'Unkown'
-    }
-  }
+  // getWalletType(walletObj){
+  //   switch(walletObj.constructor.name){
+  //     // case 'AnchorUser':
+  //     //   return 'AnchorUser'
+  //     case 'WombatUser':
+  //       return 'WombatUser'
+  //     default:
+  //       return 'Unkown'
+  //   }
+  // }
 
   async getPublickey(type){
     const { activeUser } = this.state
@@ -103,22 +103,20 @@ class ClaimPage extends React.Component {
 
     let pubKey;
     try {
-      console.log(this.getWalletType(activeUser))
-      console.log(activeUser.constructor.name)
-      console.log(activeUser)
-      pubKey = await (this.getPublickey(this.getWalletType(activeUser)))
+      pubKey = activeUser.keys[0]
     }catch(e){
       this.setState({ isLoading: false })
       if(e.message === 'Unkown wallet type'){
         this.msg('Please login with Wombat wallet', 'error')
       }else{
+      this.msg('Please login with Wombat wallet', 'error')
       this.msg('Can not retrive the public key check you wallet is open', 'error')
       }
       return
     }
     let sig = ''
-    let txHash = ''
-    const isAnchor = this.getWalletType(activeUser) === 'AnchorUser'
+    // let txHash = ''
+    // const isAnchor = this.getWalletType(activeUser) === 'AnchorUser'
     try{
         let signMsg
         try {
@@ -136,7 +134,7 @@ class ClaimPage extends React.Component {
       return
     }
     const params = { polygonAddress, eosname: accountName, publicKey:pubKey, eosSig: sig }
-    if (txHash) params.txHash = txHash
+    // if (txHash) params.txHash = txHash
     if (hasAvailableLpAirdrop || hasAvailableAirdrop || true) {
       try {
         const resp = await axios.post(`${BACKEND_API2}/eos-airdrop/claim`, params)
@@ -147,7 +145,7 @@ class ClaimPage extends React.Component {
     } else {
       this.msg('No available Airdrop to claim', 'error')
     }
-    if(isAnchor) this.setState({ waitForTx: false })
+    // if(isAnchor) this.setState({ waitForTx: false })
     this.setState({ isLoading: false })
   }
 
