@@ -299,7 +299,7 @@ class ClaimPage extends React.Component {
         {modalButton}
         <h3 className='ual-subtitle'>{loggedIn}</h3>
         {this.renderAddrForm()}
-        {this.state.waitForTx && <p className="blink">Waiting for transaction confirmation...</p>}
+        {/* this.state.waitForTx && <p className="blink">Waiting for transaction confirmation...</p> */}
         {this.state.isLoading && <Spinner animation="grow" variant="light" />}
         {this.renderYUPClamAmmount()}
         {this.renderClaimBtn()}
